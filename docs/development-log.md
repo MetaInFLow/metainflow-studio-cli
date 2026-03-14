@@ -5,7 +5,7 @@
 ### 阶段目标
 - 初始化 `metainflow-studio-cli` 项目结构。
 - 优先实现 `parse-doc` 命令。
-- 支持文档格式矩阵：`.pdf .doc .docx .pptx .xlsx .csv .txt .md .html`。
+- 支持文档格式矩阵：`.pdf .doc .docx .pptx .xls .xlsx .csv .txt .md .html`。
 - 建立真实样本验证基线。
 
 ### 已完成内容
@@ -19,7 +19,7 @@
   - `PROVIDER_MODEL_DOC_PARSE`
 - 实现解析服务主链路（按扩展名分发）：
   - 文本：`.txt`, `.md`
-  - 表格：`.csv`, `.xlsx`
+  - 表格：`.csv`, `.xls`, `.xlsx`
   - Office：`.docx`, `.pptx`, `.doc`（通过 soffice 转换）
   - 网页：`.html`
   - PDF：文本抽取 + OCR 兜底
@@ -37,7 +37,7 @@
   - 命令：`METAINFLOW_RUN_SAMPLE_MATRIX=1 pytest -q tests/integration/test_real_sample_matrix.py`
   - 结果：`1 passed`
 - 真实样本逐个命令验证（`parse-doc --output json`）：
-  - 通过：`pdf/docx/pptx/xlsx/csv/txt/md/html`
+  - 通过：`pdf/docx/pptx/xls/xlsx/csv/txt/md/html`
   - 失败：`doc`（当前环境缺少 `soffice`）
 
 ### 当前已知问题

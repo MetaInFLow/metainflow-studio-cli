@@ -2,7 +2,7 @@ from metainflow_studio_cli.services.doc_parse.detector import SUPPORTED_EXTENSIO
 
 
 def test_supported_extensions_cover_required_formats() -> None:
-    expected = {".pdf", ".doc", ".docx", ".pptx", ".xlsx", ".csv", ".txt", ".md", ".html"}
+    expected = {".pdf", ".doc", ".docx", ".pptx", ".xls", ".xlsx", ".csv", ".txt", ".md", ".html"}
     assert expected.issubset(SUPPORTED_EXTENSIONS)
 
 

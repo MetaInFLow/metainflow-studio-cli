@@ -4,7 +4,7 @@
 
 `metainflow-studio-cli` 当前主功能是 `parse-doc`：解析文档（本地或 URL），输出文本或 JSON。
 
-支持格式：`.pdf .doc .docx .pptx .xlsx .csv .txt .md .html`
+支持格式：`.pdf .doc .docx .pptx .xls .xlsx .csv .txt .md .html`
 
 ## 1) 安装
 

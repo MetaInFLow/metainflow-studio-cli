@@ -14,7 +14,7 @@
 
 - 目标先聚焦 `parse-doc`，并以 Ubuntu 生产可运行为约束。
 - 架构采用 CLI + Service 分层，统一输出 `success/data/meta/error`。
-- 解析能力覆盖 9 类格式：`.pdf/.doc/.docx/.pptx/.xlsx/.csv/.txt/.md/.html`。
+- 解析能力覆盖 10 类格式：`.pdf/.doc/.docx/.pptx/.xls/.xlsx/.csv/.txt/.md/.html`。
 - `.doc` 走 `soffice` 转换链；`.pdf` 走文本抽取 + OCR 兜底。
 - 已建立真实样本矩阵与集成门控，支持快速回归。
 
@@ -41,7 +41,7 @@
 
 ### 2026-03-14 12:18
 
-- `doc-parse`：补齐核心格式解析链路（html/docx/pptx/xlsx/pdf）。
+- `doc-parse`：补齐核心格式解析链路（html/docx/pptx/xls/xlsx/pdf）。
 - `doc-parse`：接入 `.doc -> .docx` 转换与 PDF OCR 兜底。
 
 ### 2026-03-14 12:05

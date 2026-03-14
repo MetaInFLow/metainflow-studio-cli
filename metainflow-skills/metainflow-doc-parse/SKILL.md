@@ -21,7 +21,7 @@ description: "Use when user needs to parse, extract, or read content from docume
 | PDF | `.pdf` | 报告、论文、合同 |
 | Word | `.doc`, `.docx` | 文档、方案 |
 | PowerPoint | `.pptx` | 演示文稿 |
-| Excel | `.xlsx` | 表格数据 |
+| Excel | `.xls`, `.xlsx` | 表格数据 |
 | CSV | `.csv` | 结构化数据 |
 | 纯文本 | `.txt`, `.md` | 文本文件 |
 | 网页 | `.html` | HTML 页面 |
@@ -54,5 +54,5 @@ python -m metainflow_studio_cli.main parse-doc --file data.xlsx --output json
 |------|----------|
 | 文件路径包含空格未加引号 | 路径有空格时用引号：`--file "my file.pdf"` |
 | 需要程序处理结果但未加 `--output json` | 需要机器可读结果时始终加 `--output json` |
-| `.doc` 解析失败 | 在 Ubuntu 安装 LibreOffice，确保 `soffice` 可用 |
+| `.doc` / `.xls` 解析失败 | 在 Ubuntu 安装 LibreOffice，确保 `soffice` 可用 |
 | 扫描 PDF 输出为空 | 安装 `tesseract-ocr` 和 `poppler-utils` 后重试 |

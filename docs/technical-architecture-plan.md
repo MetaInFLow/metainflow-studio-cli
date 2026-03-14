@@ -63,6 +63,7 @@
 - `.csv`：标准库 `csv`
 - `.html`：轻量文本提取
 - `.docx/.pptx/.xlsx`：基于 OpenXML/ZIP 结构解析
+- `.xls`：通过 `LibreOffice soffice` 转 `.xlsx`
 - `.doc`：通过 `LibreOffice soffice` 转 `.docx`
 - `.pdf`：先文本抽取，再 OCR 兜底
 

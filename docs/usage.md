@@ -101,6 +101,24 @@ metainflow search-summary --query "React 19 新特性"
 metainflow search-summary --query "ByteDance 开源项目" --instruction "按项目类型分类" --output json
 ```
 
+### 搜索总结的模型配置
+
+`search-summary` 自己完成搜索，模型只负责总结。常用配置方式：
+
+```bash
+export PROVIDER_BASE_URL="https://your-openai-compatible-endpoint/v1"
+export PROVIDER_API_KEY="your-api-key"
+export PROVIDER_MODEL_WEB_SEARCH="your-model-name"
+export WEB_SEARCH_PAGE_TIMEOUT_SECONDS="30"
+```
+
+然后执行：
+
+```bash
+python -m playwright install chromium
+metainflow search-summary --query "React 19 新特性" --output json
+```
+
 如果 `metainflow` 命令不可用，可临时用：
 
 ```bash

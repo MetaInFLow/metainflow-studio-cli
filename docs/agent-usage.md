@@ -155,6 +155,20 @@ python -m playwright install chromium
 hash -r
 ```
 
+### 第 1.1 步：准备搜索总结模型配置
+
+```bash
+export PROVIDER_BASE_URL="https://your-openai-compatible-endpoint/v1"
+export PROVIDER_API_KEY="your-api-key"
+export PROVIDER_MODEL_WEB_SEARCH="your-model-name"
+export WEB_SEARCH_PAGE_TIMEOUT_SECONDS="30"
+```
+
+说明：
+- `search-summary` 的搜索阶段不依赖 provider-native web search
+- 这里只要求模型兼容普通文本总结调用
+- `WEB_SEARCH_PAGE_TIMEOUT_SECONDS` 用于控制百度搜索页等待时间
+
 ### 第 2 步：检查命令路径
 
 ```bash

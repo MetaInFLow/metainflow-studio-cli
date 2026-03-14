@@ -49,7 +49,7 @@
 - `feat/web-search` worktree 全量测试：`40 passed, 1 skipped`
 - `feat/web-search` 真实联调：
   - `python -m metainflow_studio_cli.main search-summary --query "React 19 新特性" --output json`
-  - 结果：Playwright 百度搜索返回非空结果，Infini 普通模型总结成功
+  - 结果：Playwright 百度搜索返回非空结果，普通模型总结成功
 
 ### 当前已知问题
 - `.doc` 解析依赖 LibreOffice：若系统无 `soffice`，会返回错误。

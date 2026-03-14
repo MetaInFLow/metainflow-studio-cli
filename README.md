@@ -59,6 +59,26 @@ metainflow search-summary --query "React 19 新特性" --instruction "按功能�
 - `PROVIDER_MODEL_DOC_PARSE`
 - `PROVIDER_MODEL_WEB_SEARCH`
 
+### Search Summary Config
+
+`search-summary` uses Playwright for search acquisition and a normal chat/completions-compatible model for summarization.
+
+Typical local setup:
+
+```bash
+export PROVIDER_BASE_URL="https://your-openai-compatible-endpoint/v1"
+export PROVIDER_API_KEY="your-api-key"
+export PROVIDER_MODEL_WEB_SEARCH="your-model-name"
+export WEB_SEARCH_PAGE_TIMEOUT_SECONDS="30"
+```
+
+Then verify with:
+
+```bash
+python -m playwright install chromium
+metainflow search-summary --query "React 19 新特性" --output json
+```
+
 ## Ubuntu dependencies
 
 Install system packages for full `.doc` / `.xls` and OCR support:

@@ -73,18 +73,24 @@ python -m metainflow_studio_cli.main parse-doc --file ./tests/integration/sample
 
 ### 方式 B：通过 skill 调用
 
-skill 目录：
+skill 源码目录在仓库内：
 
 ```text
-metainflow-skills/
-  metainflow-doc-parse/
-    SKILL.md
+metainflow-studio-cli/
+  metainflow-skills/
+    metainflow-doc-parse/
+      SKILL.md
 ```
+
+这样做的目的：
+- skill 和 CLI 代码一起版本管理
+- 提交、评审、回滚更简单
+- 避免 skill 与真实能力实现脱节
 
 挂载到 OpenCode 用户技能目录：
 
 ```bash
-ln -sfn "/Users/zsy/Desktop/openclaw/BeeClaw/metainflow-skills/metainflow-doc-parse" "/Users/zsy/.agents/skills/metainflow-doc-parse"
+ln -sfn "/Users/zsy/Desktop/openclaw/BeeClaw/metainflow-studio-cli/metainflow-skills/metainflow-doc-parse" "/Users/zsy/.agents/skills/metainflow-doc-parse"
 ```
 
 验证挂载：
@@ -157,6 +163,10 @@ METAINFLOW_RUN_SAMPLE_MATRIX=1 pytest -q tests/integration/test_real_sample_matr
 
 通常会改这些位置：
 - `metainflow-skills/<skill-name>/SKILL.md`
+
+推荐原则：
+- skill 源码放在仓库内的 `metainflow-skills/`
+- `~/.agents/skills/` 只放软链接，不直接放源码
 
 建议顺序：
 1. 先把 CLI 能力做通

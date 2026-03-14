@@ -8,6 +8,7 @@ Required extensions for the full matrix:
 - `.doc`
 - `.docx`
 - `.pptx`
+- `.xls`
 - `.xlsx`
 - `.csv`
 - `.txt`

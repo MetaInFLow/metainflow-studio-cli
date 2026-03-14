@@ -9,6 +9,10 @@ from pathlib import Path
 from metainflow_studio_cli.core.errors import ProcessingError
 
 
+MAX_XLSX_RENDER_CELLS = 50_000
+MAX_XLSX_SPARSE_WINDOW = 10_000
+
+
 def parse_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
@@ -45,6 +49,79 @@ def _read_xml_texts(xml_bytes: bytes) -> str:
     return "\n".join(texts)
 
 
+def _column_index(cell_ref: str) -> int:
+    letters = "".join(ch for ch in cell_ref if ch.isalpha()).upper()
+    if not letters:
+        return 0
+
+    index = 0
+    for letter in letters:
+        index = index * 26 + (ord(letter) - ord("A") + 1)
+    return index - 1
+
+
+def _row_index(cell_ref: str) -> int:
+    digits = "".join(ch for ch in cell_ref if ch.isdigit())
+    if not digits:
+        return 0
+    return max(int(digits) - 1, 0)
+
+
+def _cell_value(cell: ET.Element, shared: list[str]) -> str:
+    value = ""
+    value_elem = next((child for child in cell if child.tag.endswith("}v")), None)
+    if value_elem is not None and value_elem.text is not None:
+        value = value_elem.text
+
+    cell_type = cell.attrib.get("t")
+    if cell_type == "s" and value.isdigit():
+        idx = int(value)
+        return shared[idx] if 0 <= idx < len(shared) else ""
+
+    if cell_type == "inlineStr":
+        inline_texts = [elem.text or "" for elem in cell.iter() if elem.tag.endswith("}t")]
+        return "".join(inline_texts)
+
+    return value
+
+
+def _parse_merge_range(cell_range: str) -> tuple[int, int, int, int]:
+    start_ref, end_ref = cell_range.split(":", 1)
+    start_row = _row_index(start_ref)
+    end_row = _row_index(end_ref)
+    start_col = _column_index(start_ref)
+    end_col = _column_index(end_ref)
+    return start_row, end_row, start_col, end_col
+
+
+def _render_markdown_table(rows: list[list[str]]) -> str:
+    if not rows:
+        return ""
+
+    header = "| " + " | ".join(rows[0]) + " |"
+    separator = "| " + " | ".join(["---"] * len(rows[0])) + " |"
+    body = ["| " + " | ".join(row) + " |" for row in rows[1:]]
+    return "\n".join([header, separator, *body])
+
+
+def _ensure_renderable_grid(
+    min_row: int | None,
+    min_col: int | None,
+    max_row: int,
+    max_col: int,
+    populated_cells: int,
+) -> None:
+    if min_row is None or min_col is None or max_row < 0 or max_col < 0:
+        return
+
+    area = (max_row - min_row + 1) * (max_col - min_col + 1)
+    if area > MAX_XLSX_RENDER_CELLS:
+        raise ProcessingError("xlsx worksheet is too large to render safely")
+
+    if area > MAX_XLSX_SPARSE_WINDOW and area > max(populated_cells, 1) * 10:
+        raise ProcessingError("xlsx worksheet is too sparse to render safely")
+
+
 def parse_docx(path: Path) -> str:
     try:
         with zipfile.ZipFile(path) as archive:
@@ -69,8 +146,6 @@ def parse_pptx(path: Path) -> str:
 
 
 def parse_xlsx(path: Path) -> tuple[str, list[list[str]]]:
-    tables: list[list[str]] = []
-    markdown_lines: list[str] = []
     try:
         with zipfile.ZipFile(path) as archive:
             shared: list[str] = []
@@ -78,42 +153,70 @@ def parse_xlsx(path: Path) -> tuple[str, list[list[str]]]:
                 shared_root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
                 shared = [elem.text or "" for elem in shared_root.iter() if elem.tag.endswith("}t")]
 
+            sheet_tables: list[list[list[str]]] = []
             for name in archive.namelist():
                 if name.startswith("xl/worksheets/sheet") and name.endswith(".xml"):
                     root = ET.fromstring(archive.read(name))
+                    cells: dict[tuple[int, int], str] = {}
+                    min_row: int | None = None
+                    min_col: int | None = None
+                    max_row = -1
+                    max_col = -1
+                    next_row_idx = 0
+
                     for row in root.iter():
                         if not row.tag.endswith("}row"):
                             continue
-                        values: list[str] = []
+                        row_ref = row.attrib.get("r", "")
+                        row_idx = _row_index(row_ref) if row_ref else next_row_idx
+                        next_col_idx = 0
                         for cell in row:
                             if not cell.tag.endswith("}c"):
                                 continue
-                            value = ""
-                            value_elem = next((c for c in cell if c.tag.endswith("}v")), None)
-                            if value_elem is not None and value_elem.text is not None:
-                                value = value_elem.text
-                            cell_type = cell.attrib.get("t")
-                            if cell_type == "s" and value.isdigit():
-                                idx = int(value)
-                                value = shared[idx] if 0 <= idx < len(shared) else ""
-                            elif cell_type == "inlineStr":
-                                inline_texts = [elem.text or "" for elem in cell.iter() if elem.tag.endswith("}t")]
-                                value = "".join(inline_texts)
-                            values.append(value)
-                        if values:
-                            tables.append(values)
+                            cell_ref = cell.attrib.get("r", "")
+                            col_idx = _column_index(cell_ref) if cell_ref else next_col_idx
+                            cells[(row_idx, col_idx)] = _cell_value(cell, shared)
+                            min_row = row_idx if min_row is None else min(min_row, row_idx)
+                            min_col = col_idx if min_col is None else min(min_col, col_idx)
+                            max_row = max(max_row, row_idx)
+                            max_col = max(max_col, col_idx)
+                            _ensure_renderable_grid(min_row, min_col, max_row, max_col, len(cells))
+                            next_col_idx = col_idx + 1
+                        next_row_idx = row_idx + 1
+
+                    for merge in root.iter():
+                        if not merge.tag.endswith("}mergeCell"):
+                            continue
+                        merge_ref = merge.attrib.get("ref")
+                        if not merge_ref or ":" not in merge_ref:
+                            continue
+                        start_row, end_row, start_col, end_col = _parse_merge_range(merge_ref)
+                        fill_value = cells.get((start_row, start_col), "")
+                        min_row = start_row if min_row is None else min(min_row, start_row)
+                        min_col = start_col if min_col is None else min(min_col, start_col)
+                        max_row = max(max_row, end_row)
+                        max_col = max(max_col, end_col)
+                        merge_area = (end_row - start_row + 1) * (end_col - start_col + 1)
+                        estimated_populated = len(cells) + max(merge_area - 1, 0)
+                        _ensure_renderable_grid(min_row, min_col, max_row, max_col, estimated_populated)
+                        for row_idx in range(start_row, end_row + 1):
+                            for col_idx in range(start_col, end_col + 1):
+                                cells[(row_idx, col_idx)] = fill_value
+
+                    if min_row is not None and min_col is not None and max_row >= 0 and max_col >= 0:
+                        table = [
+                            [cells.get((row_idx, col_idx), "") for col_idx in range(min_col, max_col + 1)]
+                            for row_idx in range(min_row, max_row + 1)
+                        ]
+                        sheet_tables.append(table)
     except (zipfile.BadZipFile, KeyError, ET.ParseError) as exc:
         raise ProcessingError(f"invalid xlsx file: {path.name}") from exc
 
+    tables = [row for table in sheet_tables for row in table]
     if not tables:
         raise ProcessingError(f"xlsx file has no readable worksheet data: {path.name}")
 
-    if tables:
-        markdown_lines.append("| " + " | ".join(tables[0]) + " |")
-        markdown_lines.append("| " + " | ".join(["---"] * len(tables[0])) + " |")
-        for row in tables[1:]:
-            markdown_lines.append("| " + " | ".join(row) + " |")
-    return "\n".join(markdown_lines), tables
+    return _render_markdown_table(tables), tables
 
 
 def parse_pdf(path: Path) -> str:

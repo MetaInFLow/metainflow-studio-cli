@@ -8,6 +8,7 @@ REQUIRED_SAMPLE_EXTENSIONS = {
     ".doc",
     ".docx",
     ".pptx",
+    ".xls",
     ".xlsx",
     ".csv",
     ".txt",

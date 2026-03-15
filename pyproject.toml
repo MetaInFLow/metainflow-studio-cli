@@ -12,6 +12,7 @@ dependencies = [
   "pydantic>=2.7.0",
   "httpx>=0.27.0",
   "playwright>=1.52.0",
+  "undetected-playwright>=0.3.0",
   "pypdf>=4.2.0",
   "pdf2image>=1.17.0",
   "pytesseract>=0.3.10",

@@ -131,6 +131,24 @@ class _FakePlaywrightContext:
         return None
 
 
+class _FallbackPage(_FakePage):
+    def __init__(self, outcomes: list[dict]) -> None:
+        super().__init__(results=[])
+        self._outcomes = outcomes
+        self._index = -1
+        self.goto_history: list[str] = []
+
+    def goto(self, url: str, wait_until: str, timeout: int) -> None:
+        self.goto_history.append(url)
+        self._index += 1
+        current = self._outcomes[self._index]
+        self._captcha = current.get("captcha", False)
+        self._no_results = current.get("no_results", False)
+        self._results = current.get("results", [])
+        self.goto_url = url
+        self.goto_timeout = timeout
+
+
 def test_search_web_with_playwright_fetches_and_normalizes_results(monkeypatch) -> None:
     page = _FakePage(
         results=[
@@ -145,6 +163,7 @@ def test_search_web_with_playwright_fetches_and_normalizes_results(monkeypatch) 
 
     result = search_web_with_playwright("React 19 新特性", timeout_seconds=12)
 
+    assert page.goto_url.startswith("https://www.baidu.com/s?")
     assert "wd=React+19+%E6%96%B0%E7%89%B9%E6%80%A7" in page.goto_url
     assert page.goto_timeout == 12000
     assert result["provider"] == "baidu-playwright"
@@ -179,15 +198,15 @@ def test_search_web_with_playwright_detects_captcha(monkeypatch) -> None:
 
 
 def test_search_web_with_playwright_maps_browser_errors(monkeypatch) -> None:
-    def fail_sync_playwright():
+    def fail_start_browser(*args, **kwargs):
         raise RuntimeError("browser failed")
 
     monkeypatch.setattr(
-        "metainflow_studio_cli.services.web_search.playwright_search_provider.sync_playwright",
-        fail_sync_playwright,
+        "metainflow_studio_cli.services.web_search.playwright_search_provider.start_browser",
+        fail_start_browser,
     )
 
-    with pytest.raises(ExternalError, match="failed to launch Playwright search"):
+    with pytest.raises(ExternalError, match="failed to launch undetected Playwright search"):
         search_web_with_playwright("query", timeout_seconds=12)
 
 
@@ -226,14 +245,8 @@ def test_search_web_with_playwright_uses_baidu_summary_selector(monkeypatch) -> 
     assert result["results"][0]["snippet"] == "Summary from baidu card"
 
 
-def test_search_web_with_playwright_does_not_treat_result_op_as_no_results(monkeypatch) -> None:
-    class _ResultOpPage(_FakePage):
-        def locator(self, selector: str):
-            if selector == ".no-result, .result-op":
-                return _FakeLocator(1)
-            return super().locator(selector)
-
-    page = _ResultOpPage(results=[_FakeElementHandleNode("Result 1", "https://example.com/1", "Snippet 1")])
+def test_search_web_with_playwright_returns_empty_results_for_no_result_page(monkeypatch) -> None:
+    page = _FakePage(results=[], no_results=True)
     monkeypatch.setattr(
         "metainflow_studio_cli.services.web_search.playwright_search_provider.sync_playwright",
         lambda: _FakePlaywrightContext(page),
@@ -241,6 +254,23 @@ def test_search_web_with_playwright_does_not_treat_result_op_as_no_results(monke
 
     result = search_web_with_playwright("React 19 新特性", timeout_seconds=12)
 
-    assert result["results"] == [
-        {"title": "Result 1", "url": "https://example.com/1", "snippet": "Snippet 1"}
-    ]
+    assert result["results"] == []
+
+
+def test_search_web_with_playwright_falls_back_to_mobile_baidu(monkeypatch) -> None:
+    page = _FallbackPage(
+        outcomes=[
+            {"captcha": True, "results": []},
+            {"results": [_FakeElementHandleNode("Result 1", "https://example.com/1", "Snippet 1")]},
+        ]
+    )
+    monkeypatch.setattr(
+        "metainflow_studio_cli.services.web_search.playwright_search_provider.sync_playwright",
+        lambda: _FakePlaywrightContext(page),
+    )
+
+    result = search_web_with_playwright("React 19 新特性", timeout_seconds=12)
+
+    assert page.goto_history[0].startswith("https://www.baidu.com/s?")
+    assert page.goto_history[1].startswith("https://m.baidu.com/s?")
+    assert result["results"][0]["title"] == "Result 1"

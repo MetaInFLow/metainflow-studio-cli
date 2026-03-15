@@ -32,6 +32,8 @@
   - `3` 外部依赖或网络失败
 - 在 `feat/web-search` worktree 中实现 `search-summary` 的独立开发分支。
 - 将 web search 主链路改为 `Playwright + 百度搜索 + 普通模型总结`。
+- 将百度入口策略优化为：`www.baidu.com` 主路径，`m.baidu.com` 兜底。
+- 将浏览器层升级为 `undetected-playwright`。
 - 实现 `playwright_search_provider`，并修复真实百度页面上的三个关键问题：
   - 结果节点实际为 `ElementHandle`，不能按 `Locator` 假设处理
   - 摘要内容位于 `[data-sanssr-cmpt="card/www-summary"]`
@@ -50,11 +52,15 @@
 - `feat/web-search` 真实联调：
   - `python -m metainflow_studio_cli.main search-summary --query "React 19 新特性" --output json`
   - 结果：Playwright 百度搜索返回非空结果，普通模型总结成功
+- 百度入口稳定性验证：
+  - `www.baidu.com`：连续 5/5 次返回结果页
+  - `m.baidu.com`：0/5 次拿到可用结果，其中多次直接进入验证页
 
 ### 当前已知问题
 - `.doc` 解析依赖 LibreOffice：若系统无 `soffice`，会返回错误。
 - Playwright 搜索链路仍依赖浏览器环境与百度页面结构。
 - 当前搜索结果 URL 仍是百度跳转链接，未解析到最终目标地址。
+- `m.baidu.com` 在当前服务器环境下不稳定，只适合作为 fallback。
 
 ### 下一步计划
 - 在 Ubuntu 服务器安装并验证系统依赖：`libreoffice`、`tesseract-ocr`、`poppler-utils` 等。

@@ -36,7 +36,7 @@ Use `search-summary` when you need keyword-based web search plus AI-generated su
 metainflow search-summary --query "React 19 新特性" --instruction "按功能分类整理" --output json
 ```
 
-`metainflow-studio-cli` acquires search results itself (currently Playwright-driven Baidu search by default), then uses the configured model only for summarization.
+`metainflow-studio-cli` acquires search results itself (currently `www.baidu.com` as primary and `m.baidu.com` as fallback via undetected Playwright), then uses the configured model only for summarization.
 
 ## Supported `parse-doc` extensions
 

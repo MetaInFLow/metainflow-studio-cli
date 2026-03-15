@@ -17,11 +17,12 @@
 其中 `search-summary` 的实现边界是：
 - 搜索结果获取由 `metainflow-studio-cli` 自己完成
 - 配置模型只负责总结，不负责联网搜索
-- 当前默认搜索源是 Playwright 驱动的百度搜索
+- 当前默认搜索源是基于 `undetected-playwright` 的百度搜索
+- 当前入口策略是：`www.baidu.com` 主路径，`m.baidu.com` 兜底
 
 当前设计现状：
 - 调用链路是 `CLI -> service -> search_provider -> summary_provider`
-- `search_provider` 通过 Playwright 打开百度搜索页并标准化 `title / url / snippet`
+- `search_provider` 通过 undetected Playwright 打开百度搜索页并标准化 `title / url / snippet`
 - `summary_provider` 再基于标准化结果调用普通模型接口做总结
 - `json` 模式下，如果搜索成功但总结失败，会保留已获取的 `results`
 
@@ -29,6 +30,7 @@
 - 优点：搜索与模型原生 web-search 能力已经解耦，切换模型不影响搜索主链路
 - 优点：相比纯 HTTP 抓取，Playwright 更适合处理百度搜索页的动态行为与风控场景
 - 优点：真实联调已验证 `Playwright + 百度搜索 + 普通模型总结` 主链路可跑通
+- 优点：稳定性验证表明 `www.baidu.com` 在当前环境下显著优于 `m.baidu.com`
 - 问题：Playwright 方案更重、更慢，部署和运行成本更高
 - 问题：当前结果链接仍是百度跳转链接，尚未解到最终目标 URL
 - 问题：当前仍是单搜索源方案，还没有多源 fallback 和正文抓取后的二次总结
@@ -40,6 +42,7 @@
 - 增加 `search -> web-crawl -> summarize` 的第二阶段深度模式
 - 增加百度跳转链接解析，尽量返回真实目标 URL
 - 评估是否在保留 Playwright 主路径的同时，引入更轻量的搜索 API 或自建聚合层作为补充
+- 持续跟踪 `m.baidu.com` 的可用性，但目前只作为 fallback，不作为默认入口
 
 对应 skill：
 - `metainflow-doc-parse`

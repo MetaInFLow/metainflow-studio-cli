@@ -17,7 +17,7 @@ def summarize_search_results(query: str, instruction: str, results: list[dict[st
     prompt_lines.append("Summarize the most useful information from these search results.")
 
     payload = {
-        "model": settings.provider_model_web_search,
+        "model": settings.summary_model,
         "messages": [
             {"role": "system", "content": "You summarize web search results into a concise helpful answer."},
             {"role": "user", "content": "\n".join(prompt_lines)},
@@ -26,9 +26,9 @@ def summarize_search_results(query: str, instruction: str, results: list[dict[st
 
     try:
         response = httpx.post(
-            f"{settings.provider_base_url.rstrip('/')}/chat/completions",
+            f"{settings.summary_base_url.rstrip('/')}/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.provider_api_key}",
+                "Authorization": f"Bearer {settings.summary_api_key}",
                 "Content-Type": "application/json",
             },
             json=payload,
@@ -56,6 +56,6 @@ def summarize_search_results(query: str, instruction: str, results: list[dict[st
     return {
         "summary": content.strip(),
         "provider": "llm",
-        "model": body.get("model", settings.provider_model_web_search),
+        "model": body.get("model", settings.summary_model),
         "request_id": body.get("id", ""),
     }

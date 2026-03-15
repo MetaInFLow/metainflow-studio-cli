@@ -32,6 +32,7 @@ def _settings() -> Settings:
         web_search_backend="auto",
         search_provider_engine="search_pro",
         search_result_count=8,
+        searxng_base_url="http://localhost:8080",
     )
 
 

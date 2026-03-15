@@ -22,6 +22,7 @@ def test_summarize_search_results_builds_plain_model_request(monkeypatch) -> Non
 
     def fake_post(url: str, *, headers: dict, json: dict, timeout: int) -> _FakeResponse:
         seen["url"] = url
+        seen["headers"] = headers
         seen["json"] = json
         return _FakeResponse(
             {
@@ -36,11 +37,18 @@ def test_summarize_search_results_builds_plain_model_request(monkeypatch) -> Non
     settings = Settings(
         provider_base_url="https://api.example.com/v1",
         provider_api_key="secret",
+        summary_base_url="https://summary.example.com/v1",
+        summary_api_key="summary-secret",
         provider_timeout_seconds=30,
         provider_max_retries=2,
         provider_model_doc_parse="doc-model",
-        provider_model_web_search="search-model",
-        web_search_page_timeout_seconds=30,
+        provider_model_web_search="legacy-search-model",
+        summary_model="summary-model",
+        search_page_timeout_seconds=30,
+        web_search_backend="auto",
+        search_provider_engine="search_pro",
+        search_result_count=10,
+        searxng_base_url="http://localhost:8080",
     )
 
     result = summarize_search_results(
@@ -50,8 +58,9 @@ def test_summarize_search_results_builds_plain_model_request(monkeypatch) -> Non
         settings=settings,
     )
 
-    assert seen["url"] == "https://api.example.com/v1/chat/completions"
-    assert seen["json"]["model"] == "search-model"
+    assert seen["url"] == "https://summary.example.com/v1/chat/completions"
+    assert seen["headers"]["Authorization"] == "Bearer summary-secret"
+    assert seen["json"]["model"] == "summary-model"
     assert "tools" not in seen["json"]
     assert seen["json"]["messages"][1]["content"].count("https://example.com/1") == 1
     assert result["summary"] == "summary text"
@@ -68,11 +77,18 @@ def test_summarize_search_results_raises_processing_error_for_bad_response(monke
     settings = Settings(
         provider_base_url="https://api.example.com/v1",
         provider_api_key="secret",
+        summary_base_url="https://summary.example.com/v1",
+        summary_api_key="summary-secret",
         provider_timeout_seconds=30,
         provider_max_retries=2,
         provider_model_doc_parse="doc-model",
-        provider_model_web_search="search-model",
-        web_search_page_timeout_seconds=30,
+        provider_model_web_search="legacy-search-model",
+        summary_model="summary-model",
+        search_page_timeout_seconds=30,
+        web_search_backend="auto",
+        search_provider_engine="search_pro",
+        search_result_count=10,
+        searxng_base_url="http://localhost:8080",
     )
 
     with pytest.raises(ProcessingError, match="summary response missing message content"):
@@ -88,11 +104,18 @@ def test_summarize_search_results_maps_http_errors(monkeypatch) -> None:
     settings = Settings(
         provider_base_url="https://api.example.com/v1",
         provider_api_key="secret",
+        summary_base_url="https://summary.example.com/v1",
+        summary_api_key="summary-secret",
         provider_timeout_seconds=30,
         provider_max_retries=2,
         provider_model_doc_parse="doc-model",
-        provider_model_web_search="search-model",
-        web_search_page_timeout_seconds=30,
+        provider_model_web_search="legacy-search-model",
+        summary_model="summary-model",
+        search_page_timeout_seconds=30,
+        web_search_backend="auto",
+        search_provider_engine="search_pro",
+        search_result_count=10,
+        searxng_base_url="http://localhost:8080",
     )
 
     with pytest.raises(ExternalError, match="web search summary request failed"):

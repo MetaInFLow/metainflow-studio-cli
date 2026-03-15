@@ -36,7 +36,12 @@ Use `search-summary` when you need keyword-based web search plus AI-generated su
 metainflow search-summary --query "React 19 新特性" --instruction "按功能分类整理" --output json
 ```
 
-`metainflow-studio-cli` acquires search results itself (currently Zhipu Web Search API as primary and Baidu via undetected Playwright as fallback), then uses the configured model only for summarization.
+`metainflow-studio-cli` acquires search results itself using a robust, three-tiered failover strategy:
+1. **Zhipu Web Search API** (Primary, highest quality via AI summarization)
+2. **SearXNG API** (Secondary fast fallback when Zhipu blocks or returns empty)
+3. **Baidu via undetected Playwright** (Ultimate fallback when APIs fail)
+
+After results are extracted, it uses the configured model only for the final summarization.
 
 ## Supported `parse-doc` extensions
 
@@ -72,6 +77,7 @@ cp .env.example .env
 | `WEB_SEARCH_BACKEND` | `auto` | `auto` / `zhipu-web-search` / `baidu-playwright` |
 | `SEARCH_PROVIDER_ENGINE` | `search_pro` | ZhipuAI search engine tier |
 | `SEARCH_RESULT_COUNT` | `10` | Number of search results to request |
+| `SEARXNG_BASE_URL` | `http://localhost:8080` | Endpoint for the SearXNG secondary fallback |
 | `METAINFLOW_RUN_SAMPLE_MATRIX` | _(unset)_ | Set to `1` to enable integration tests |
 
 ### Playwright fallback (optional)
@@ -84,6 +90,29 @@ python -m playwright install chromium
 ```
 
 If not installed, `WEB_SEARCH_BACKEND=auto` will skip the Playwright fallback gracefully.
+
+### SearXNG fallback (Recommended)
+
+To enable the secondary SearXNG fallback tier, you can run a local container with **JSON format explicitly allowed**:
+
+```bash
+# Create custom settings.yml to bypass SearXNG default JSON ban
+mkdir -p /tmp/searxng && cat << 'EOF' > /tmp/searxng/settings.yml
+search:
+  formats:
+    - html
+    - json
+server:
+  port: 8080
+  bind_address: "0.0.0.0"
+  secret_key: "my_ultra_secret_key"
+EOF
+
+# Run SearXNG
+docker run --rm -d --name searxng -p 8080:8080 -v /tmp/searxng:/etc/searxng searxng/searxng
+```
+
+Once running on port `8080` (or another host via `SEARXNG_BASE_URL`), the `WEB_SEARCH_BACKEND=auto` router will seamlessly catch requests that Zhipu fails to process.
 
 ## Ubuntu dependencies
 

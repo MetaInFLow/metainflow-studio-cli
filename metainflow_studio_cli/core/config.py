@@ -19,6 +19,7 @@ class Settings:
     web_search_backend: str
     search_provider_engine: str
     search_result_count: int
+    searxng_base_url: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -47,4 +48,5 @@ class Settings:
             web_search_backend=os.getenv("WEB_SEARCH_BACKEND", "auto"),
             search_provider_engine=os.getenv("SEARCH_PROVIDER_ENGINE", "search_pro"),
             search_result_count=int(os.getenv("SEARCH_RESULT_COUNT", "10")),
+            searxng_base_url=os.getenv("SEARXNG_BASE_URL", "http://localhost:8080"),
         )

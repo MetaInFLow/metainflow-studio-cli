@@ -80,8 +80,8 @@
 - skill：`metainflow-web-search`
 - 外部用法：与 `miaoda-web-search` 保持一致
 - 搜索：由 `metainflow-studio-cli` 自己获取结果
-- 默认搜索源：`www.baidu.com` + `undetected-playwright`
-- 兜底入口：`m.baidu.com`
+- 默认搜索源：智谱 `Web Search API`
+- 兜底搜索源：百度 `undetected-playwright`
 - 总结：由配置模型基于标准化结果生成摘要
 
 选择原则：
@@ -90,20 +90,19 @@
 - 保证搜索能力不依赖 provider-native web search
 - 默认主路径优先保证百度搜索可抓取成功
 - 入口选择以真实稳定性验证结果为准
+- provider web search 与 Playwright 搜索都要复用同一标准化结果结构
 - 后续再与 `web-crawl` 拆分协作
 
 当前实现状态：
-- 已实现 `playwright_search_provider + summary_provider + service` 三层拆分
-- 当前默认入口是 `www.baidu.com`，`m.baidu.com` 仅作为 fallback
-- 浏览器层使用 `undetected-playwright`
+- 已实现 `search_provider + playwright_search_provider + zhipu_web_search_provider + summary_provider + service` 五层拆分
+- 当前默认入口是智谱 `Web Search API`，失败时回退到百度 Playwright
+- 浏览器层保留 `undetected-playwright` 作为 fallback 搜索能力
 - 总结阶段调用普通模型接口，不依赖 provider-native web search
 - 当前 `json` 模式支持在总结失败时保留已获取的搜索结果
 
 当前表现观察：
-- 当前设计选择更偏向“可抓取成功”而非“最低资源成本”
-- Playwright 方案预期可提升百度搜索页的实际可用性，但也会引入更高的耗时和运行成本
-- 真实联调已验证：当前环境下 `Playwright + 百度搜索 + 普通模型总结` 可返回非空结果与摘要
-- 稳定性验证结果：`www.baidu.com` 连续多次可稳定返回结果；`m.baidu.com` 更容易出现验证码或空 DOM
+- 当前设计从单一路径演进为“provider 结构化搜索主、Playwright 百度备”的混合方案
+- Playwright fallback 继续保留真实环境验证过的可用抓取链路
 - 当前真实返回的结果链接仍是百度跳转链接，尚未解析成最终落地 URL
 - 因此当前版本更适合作为可用基线，而不是最终搜索质量形态
 

@@ -6,6 +6,7 @@ SUPPORTED_EXTENSIONS = {
     ".doc",
     ".docx",
     ".pptx",
+    ".xls",
     ".xlsx",
     ".csv",
     ".txt",

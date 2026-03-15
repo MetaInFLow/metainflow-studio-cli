@@ -21,6 +21,7 @@
 - `.doc`
 - `.docx`
 - `.pptx`
+- `.xls`
 - `.xlsx`
 - `.csv`
 - `.txt`

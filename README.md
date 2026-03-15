@@ -26,6 +26,7 @@ python -m metainflow_studio_cli.main parse-doc --file ./sample.txt --output json
 
 - `.pdf`
 - `.doc` (converted via LibreOffice `soffice`)
+- `.xls` (converted via LibreOffice `soffice`)
 - `.docx`
 - `.pptx`
 - `.xlsx`
@@ -43,7 +44,7 @@ python -m metainflow_studio_cli.main parse-doc --file ./sample.txt --output json
 
 ## Ubuntu dependencies
 
-Install system packages for full `.doc` and OCR support:
+Install system packages for full `.doc` / `.xls` and OCR support:
 
 ```bash
 sudo apt-get update

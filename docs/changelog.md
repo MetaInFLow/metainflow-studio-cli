@@ -14,13 +14,20 @@
 
 - 目标先聚焦 `parse-doc`，并以 Ubuntu 生产可运行为约束。
 - 架构采用 CLI + Service 分层，统一输出 `success/data/meta/error`。
-- 解析能力覆盖 9 类格式：`.pdf/.doc/.docx/.pptx/.xlsx/.csv/.txt/.md/.html`。
+- 解析能力覆盖 10 类格式：`.pdf/.doc/.docx/.pptx/.xls/.xlsx/.csv/.txt/.md/.html`。
 - `.doc` 走 `soffice` 转换链；`.pdf` 走文本抽取 + OCR 兜底。
 - 已建立真实样本矩阵与集成门控，支持快速回归。
 
 ---
 
 ## 2026-03-14
+
+### 2026-03-14 17:45
+
+- `doc-parse`：补齐 `.xls -> .xlsx` 转换链路，并保留原始输入的 `source.file_type / resolved_path`。
+- `doc-parse`：增强 `.xlsx` 解析，支持坐标保真、merged cells 展开。
+- `testing`：新增 `.xls` 真实样本、转换重试回归、merge 解析测试与集成验证。
+- `docs`：更新 `metainflow-doc-parse` skill，并记录复杂模板区域切分的当前 TODO。
 
 ### 2026-03-14 12:53
 
@@ -41,7 +48,7 @@
 
 ### 2026-03-14 12:18
 
-- `doc-parse`：补齐核心格式解析链路（html/docx/pptx/xlsx/pdf）。
+- `doc-parse`：补齐核心格式解析链路（html/docx/pptx/xls/xlsx/pdf）。
 - `doc-parse`：接入 `.doc -> .docx` 转换与 PDF OCR 兜底。
 
 ### 2026-03-14 12:05

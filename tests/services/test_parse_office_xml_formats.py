@@ -217,6 +217,50 @@ def test_parse_xlsx_rejects_huge_merged_ranges(tmp_path: Path) -> None:
         parse_document(str(file_path), output="json")
 
 
+def test_parse_xlsx_splits_disconnected_regions(tmp_path: Path) -> None:
+    file_path = tmp_path / "regions.xlsx"
+    with zipfile.ZipFile(file_path, "w") as archive:
+        archive.writestr(
+            "xl/worksheets/sheet1.xml",
+            """<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>name</t></is></c><c r="B1" t="inlineStr"><is><t>score</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>alice</t></is></c><c r="B2" t="inlineStr"><is><t>98</t></is></c></row><row r="6"><c r="F6" t="inlineStr"><is><t>region</t></is></c><c r="G6" t="inlineStr"><is><t>value</t></is></c></row><row r="7"><c r="F7" t="inlineStr"><is><t>north</t></is></c><c r="G7" t="inlineStr"><is><t>42</t></is></c></row></sheetData></worksheet>""",
+        )
+
+    result = parse_document(str(file_path), output="json")
+
+    assert result["success"] is True
+    assert result["data"]["tables"] == [
+        ["name", "score"],
+        ["alice", "98"],
+        ["region", "value"],
+        ["north", "42"],
+    ]
+    assert "| name | score |" in result["data"]["markdown"]
+    assert "| region | value |" in result["data"]["markdown"]
+
+
+def test_parse_xlsx_keeps_merged_block_together_when_splitting_regions(tmp_path: Path) -> None:
+    file_path = tmp_path / "merged-regions.xlsx"
+    with zipfile.ZipFile(file_path, "w") as archive:
+        archive.writestr(
+            "xl/sharedStrings.xml",
+            """<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><si><t>region</t></si><si><t>total</t></si><si><t>north</t></si><si><t>meta</t></si><si><t>value</t></si></sst>""",
+        )
+        archive.writestr(
+            "xl/worksheets/sheet1.xml",
+            """<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="C1" t="s"><v>1</v></c></row><row r="2"><c r="A2" t="s"><v>2</v></c></row><row r="6"><c r="F6" t="s"><v>3</v></c><c r="G6" t="s"><v>4</v></c></row></sheetData><mergeCells count="2"><mergeCell ref="A1:B1"/><mergeCell ref="A2:A3"/></mergeCells></worksheet>""",
+        )
+
+    result = parse_document(str(file_path), output="json")
+
+    assert result["success"] is True
+    assert result["data"]["tables"] == [
+        ["region", "region", "total"],
+        ["north", "", ""],
+        ["north", "", ""],
+        ["meta", "value"],
+    ]
+
+
 @pytest.mark.parametrize("extension", [".docx", ".pptx", ".xlsx"])
 def test_parse_invalid_office_file_raises_processing_error(tmp_path: Path, extension: str) -> None:
     file_path = tmp_path / f"broken{extension}"

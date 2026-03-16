@@ -47,7 +47,7 @@ python -m metainflow_studio_cli.main parse-doc --file data.xlsx --output json
 ```
 需要获取文档内容
 ├─ 文档是本地文件或可下载 URL → metainflow parse-doc
-├─ 文档是网页正文抓取任务 → 未来可接 metainflow web-crawl（待实现）
+├─ 文档是网页正文抓取任务 → 使用 metainflow web-crawl
 └─ 需要结构化结果供程序处理 → 使用 --output json
 ```
 

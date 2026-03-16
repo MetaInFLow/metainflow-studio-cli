@@ -12,3 +12,6 @@ def test_help_contains_parse_doc_command() -> None:
     assert "parse-doc" in result.stdout
     assert "search-summary" in result.stdout
     assert "web-crawl" in result.stdout
+    assert "enterprise-query" in result.stdout
+    assert "enterprise-search" in result.stdout
+    assert "enterprise-balance" in result.stdout

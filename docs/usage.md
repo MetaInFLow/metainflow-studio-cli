@@ -26,6 +26,7 @@ cp .env.example .env
 | `PROVIDER_MODEL_DOC_PARSE` | `gpt-4.1-mini` | `parse-doc` 使用的模型 |
 | `PROVIDER_MODEL_WEB_FETCH` | `gpt-4.1-mini` | `web-crawl` 使用的模型 |
 | `METAINFLOW_WEB_FETCH_VERIFY_SSL` | `1` | `web-crawl` 是否校验 SSL |
+| `METAINFLOW_RUN_SAMPLE_MATRIX` | _(未设置)_ | 设为 `1` 启用真实样本矩阵集成测试 |
 
 ## 1) 安装
 

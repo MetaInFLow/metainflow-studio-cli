@@ -64,6 +64,7 @@ cp .env.example .env
 | `PROVIDER_MODEL_DOC_PARSE` | `gpt-4.1-mini` | Model used by `parse-doc` |
 | `PROVIDER_MODEL_WEB_FETCH` | `gpt-4.1-mini` | Model used by `web-crawl` |
 | `METAINFLOW_WEB_FETCH_VERIFY_SSL` | `1` | Whether `web-crawl` verifies SSL certificates |
+| `METAINFLOW_RUN_SAMPLE_MATRIX` | _(unset)_ | Set to `1` to enable real sample matrix integration tests |
 
 ## Ubuntu dependencies
 

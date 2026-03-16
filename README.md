@@ -1,6 +1,6 @@
 # metainflow-studio-cli
 
-`metainflow-studio-cli` is a Python CLI toolkit. The first implemented command is `parse-doc`.
+`metainflow-studio-cli` is a Python CLI toolkit. The current implemented commands are `parse-doc` and `web-crawl`.
 
 ## Skills
 
@@ -10,9 +10,15 @@ For local OpenCode discovery, symlink a skill into `~/.agents/skills/` from the 
 
 ```bash
 ln -sfn "$(pwd)/metainflow-skills/metainflow-doc-parse" "$HOME/.agents/skills/metainflow-doc-parse"
+ln -sfn "$(pwd)/metainflow-skills/metainflow-web-fetch" "$HOME/.agents/skills/metainflow-web-fetch"
 ```
 
 More agent-facing setup details are in `docs/agent-usage.md`.
+
+Available repo-local skills:
+
+- `metainflow-doc-parse`
+- `metainflow-web-fetch`
 
 ## Quick Start
 
@@ -20,7 +26,14 @@ More agent-facing setup details are in `docs/agent-usage.md`.
 python -m pip install -e .[dev]
 pytest -q
 python -m metainflow_studio_cli.main parse-doc --file ./sample.txt --output json
+python -m metainflow_studio_cli.main web-crawl --url https://example.com --output json
 ```
+
+## Web Crawl
+
+Use `web-crawl` when you have a specific URL and need page content extraction with optional AI summarization.
+
+Attribution: This project uses Crawl4AI (https://github.com/unclecode/crawl4ai) for web data extraction.
 
 ## Supported `parse-doc` extensions
 
@@ -35,11 +48,21 @@ python -m metainflow_studio_cli.main parse-doc --file ./sample.txt --output json
 
 ## Environment variables
 
-- `PROVIDER_BASE_URL`
-- `PROVIDER_API_KEY`
-- `PROVIDER_TIMEOUT_SECONDS`
-- `PROVIDER_MAX_RETRIES`
-- `PROVIDER_MODEL_DOC_PARSE`
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `PROVIDER_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible API base URL |
+| `PROVIDER_API_KEY` | _(required)_ | API key |
+| `PROVIDER_TIMEOUT_SECONDS` | `60` | Request timeout in seconds |
+| `PROVIDER_MAX_RETRIES` | `2` | Max retries on failure |
+| `PROVIDER_MODEL_DOC_PARSE` | `gpt-4.1-mini` | Model used by `parse-doc` |
+| `PROVIDER_MODEL_WEB_FETCH` | `gpt-4.1-mini` | Model used by `web-crawl` |
+| `METAINFLOW_WEB_FETCH_VERIFY_SSL` | `1` | Whether `web-crawl` verifies SSL certificates |
 
 ## Ubuntu dependencies
 

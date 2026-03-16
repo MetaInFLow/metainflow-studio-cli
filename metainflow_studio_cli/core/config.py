@@ -22,6 +22,11 @@ class Settings:
     search_result_count: int = 10
     searxng_base_url: str = "http://localhost:8080"
     web_fetch_verify_ssl: bool = True
+    enterprise_api_base_url: str = "https://test.jszypt.com:42211/admin/api/getTenantApi"
+    enterprise_balance_url: str = "https://test.jszypt.com:42211/sys-tenant-hehe/query"
+    enterprise_api_app_id: str = ""
+    enterprise_api_secret: str = ""
+    enterprise_api_verify_ssl: bool = True
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -48,4 +53,16 @@ class Settings:
             search_result_count=int(os.getenv("SEARCH_RESULT_COUNT", "10")),
             searxng_base_url=os.getenv("SEARXNG_BASE_URL", "http://localhost:8080"),
             web_fetch_verify_ssl=os.getenv("METAINFLOW_WEB_FETCH_VERIFY_SSL", "1") not in {"0", "false", "FALSE"},
+            enterprise_api_base_url=os.getenv(
+                "METAINFLOW_ENTERPRISE_API_BASE_URL",
+                "https://test.jszypt.com:42211/admin/api/getTenantApi",
+            ),
+            enterprise_balance_url=os.getenv(
+                "METAINFLOW_ENTERPRISE_BALANCE_URL",
+                "https://test.jszypt.com:42211/sys-tenant-hehe/query",
+            ),
+            enterprise_api_app_id=os.getenv("METAINFLOW_ENTERPRISE_API_APP_ID", ""),
+            enterprise_api_secret=os.getenv("METAINFLOW_ENTERPRISE_API_SECRET", ""),
+            enterprise_api_verify_ssl=os.getenv("METAINFLOW_ENTERPRISE_API_VERIFY_SSL", "1")
+            not in {"0", "false", "FALSE"},
         )

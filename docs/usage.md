@@ -7,6 +7,9 @@
 - `parse-doc`：解析文档（本地或 URL），输出文本或 JSON
 - `search-summary`：按关键词搜索互联网信息，并输出 AI 总结
 - `web-crawl`：抓取指定 URL 的网页内容，并按需总结/提取
+- `enterprise-query`：按企业全称/信用代码/注册号查询企业详情
+- `enterprise-search`：按简称或片段模糊搜索企业候选
+- `enterprise-balance`：查询企业接口余额
 
 支持格式：`.pdf .doc .docx .pptx .xls .xlsx .csv .txt .md .html`
 
@@ -36,6 +39,11 @@ cp .env.example .env
 | `SEARCH_RESULT_COUNT` | `10` | 搜索结果数量 |
 | `SEARXNG_BASE_URL` | `http://localhost:8080` | SearXNG fallback 地址 |
 | `METAINFLOW_WEB_FETCH_VERIFY_SSL` | `1` | `web-crawl` 是否校验 SSL |
+| `METAINFLOW_ENTERPRISE_API_BASE_URL` | `https://test.jszypt.com:42211/admin/api/getTenantApi` | 企业查询接口地址 |
+| `METAINFLOW_ENTERPRISE_BALANCE_URL` | `https://test.jszypt.com:42211/sys-tenant-hehe/query` | 企业余额接口地址 |
+| `METAINFLOW_ENTERPRISE_API_APP_ID` | _(必填，enterprise 命令需要)_ | 企业接口 appid |
+| `METAINFLOW_ENTERPRISE_API_SECRET` | _(必填，enterprise 命令需要)_ | 企业接口 secret |
+| `METAINFLOW_ENTERPRISE_API_VERIFY_SSL` | `1` | 企业接口是否校验 SSL |
 | `METAINFLOW_RUN_SAMPLE_MATRIX` | _(未设置)_ | 设为 `1` 启用真实样本矩阵集成测试 |
 
 如果需要 `search-summary` 的 Baidu Playwright fallback：
@@ -77,6 +85,9 @@ metainflow --help
 metainflow parse-doc --help
 metainflow search-summary --help
 metainflow web-crawl --help
+metainflow enterprise-search --help
+metainflow enterprise-query --help
+metainflow enterprise-balance --help
 pytest -q
 ```
 
@@ -114,12 +125,32 @@ metainflow web-crawl --url "https://example.com/page.html"
 metainflow web-crawl --url "https://example.com/page.html" --instruction "提取主要观点" --output json
 ```
 
+### 模糊搜索企业候选
+
+```bash
+metainflow enterprise-search --keyword "示例智能" --session-id "thread-123" --output json
+```
+
+### 精确查询企业详情
+
+```bash
+metainflow enterprise-query --type business --keyword "示例智能（深圳）科技有限公司" --session-id "thread-123" --output json
+```
+
+### 查询企业接口余额
+
+```bash
+metainflow enterprise-balance --session-id "thread-123" --output json
+```
+
 如果 `metainflow` 命令不可用，可临时用：
 
 ```bash
 python -m metainflow_studio_cli.main parse-doc --file ./tests/integration/samples/Assignment1.docx --output json
 python -m metainflow_studio_cli.main search-summary --query "React 19 新特性" --output json
 python -m metainflow_studio_cli.main web-crawl --url https://example.com/page.html --output json
+python -m metainflow_studio_cli.main enterprise-search --keyword "示例智能" --output json
+python -m metainflow_studio_cli.main enterprise-query --type business --keyword "示例智能（深圳）科技有限公司" --output json
 ```
 
 ## 3) JSON 输出结构

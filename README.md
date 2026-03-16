@@ -1,6 +1,6 @@
 # metainflow-studio-cli
 
-`metainflow-studio-cli` is a Python CLI toolkit. The current implemented commands are `parse-doc`, `search-summary`, and `web-crawl`.
+`metainflow-studio-cli` is a Python CLI toolkit. The current implemented commands are `parse-doc`, `search-summary`, `web-crawl`, `enterprise-query`, `enterprise-search`, and `enterprise-balance`.
 
 ## Skills
 
@@ -12,6 +12,7 @@ For local OpenCode discovery, symlink skills into `~/.agents/skills/` from the r
 ln -sfn "$(pwd)/metainflow-skills/metainflow-doc-parse" "$HOME/.agents/skills/metainflow-doc-parse"
 ln -sfn "$(pwd)/metainflow-skills/metainflow-web-search" "$HOME/.agents/skills/metainflow-web-search"
 ln -sfn "$(pwd)/metainflow-skills/metainflow-web-fetch" "$HOME/.agents/skills/metainflow-web-fetch"
+ln -sfn "$(pwd)/metainflow-skills/metainflow-enterprise-query" "$HOME/.agents/skills/metainflow-enterprise-query"
 ```
 
 More agent-facing setup details are in `docs/agent-usage.md`.
@@ -21,6 +22,7 @@ Available repo-local skills:
 - `metainflow-doc-parse`
 - `metainflow-web-search`
 - `metainflow-web-fetch`
+- `metainflow-enterprise-query`
 
 ## Quick Start
 
@@ -30,6 +32,8 @@ pytest -q
 python -m metainflow_studio_cli.main parse-doc --file ./sample.txt --output json
 python -m metainflow_studio_cli.main search-summary --query "React 19 新特性" --output json
 python -m metainflow_studio_cli.main web-crawl --url https://example.com --output json
+python -m metainflow_studio_cli.main enterprise-search --keyword "示例智能" --output json
+python -m metainflow_studio_cli.main enterprise-query --type business --keyword "示例智能（深圳）科技有限公司" --output json
 ```
 
 ## Search Summary
@@ -47,6 +51,10 @@ After results are collected, the configured summary model generates the final an
 ## Web Crawl
 
 Use `web-crawl` when you already have a target URL and need page extraction with optional summarization. This command uses Crawl4AI for page retrieval.
+
+## Enterprise Query
+
+Use `enterprise-query` for exact enterprise detail lookup, `enterprise-search` for fuzzy candidate search, and `enterprise-balance` for balance diagnostics. The recommended agent routing is `exact-first, fuzzy-fallback` for strong full names and `fuzzy-first` for ambiguous fragments. Pass `--session-id` when you want cache reuse across repeated lookups for the same agent session.
 
 ## Supported `parse-doc` extensions
 
@@ -86,6 +94,11 @@ cp .env.example .env
 | `SEARCH_RESULT_COUNT` | `10` | Number of search results to request |
 | `SEARXNG_BASE_URL` | `http://localhost:8080` | Endpoint for the SearXNG fallback |
 | `METAINFLOW_WEB_FETCH_VERIFY_SSL` | `1` | Whether `web-crawl` verifies SSL certificates |
+| `METAINFLOW_ENTERPRISE_API_BASE_URL` | `https://test.jszypt.com:42211/admin/api/getTenantApi` | Enterprise query endpoint |
+| `METAINFLOW_ENTERPRISE_BALANCE_URL` | `https://test.jszypt.com:42211/sys-tenant-hehe/query` | Enterprise balance endpoint |
+| `METAINFLOW_ENTERPRISE_API_APP_ID` | _(required for enterprise commands)_ | Enterprise API appid |
+| `METAINFLOW_ENTERPRISE_API_SECRET` | _(required for enterprise commands)_ | Enterprise API secret |
+| `METAINFLOW_ENTERPRISE_API_VERIFY_SSL` | `1` | Whether enterprise requests verify SSL |
 | `METAINFLOW_RUN_SAMPLE_MATRIX` | _(unset)_ | Set to `1` to enable real sample matrix integration tests |
 
 ### Playwright fallback

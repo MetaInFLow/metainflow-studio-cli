@@ -104,6 +104,74 @@ def _render_markdown_table(rows: list[list[str]]) -> str:
     return "\n".join([header, separator, *body])
 
 
+def _is_non_empty(value: str) -> bool:
+    return bool(value and value.strip())
+
+
+def _split_table_regions(cells: dict[tuple[int, int], str]) -> list[list[list[str]]]:
+    non_empty = {coord for coord, value in cells.items() if _is_non_empty(value)}
+    if not non_empty:
+        return []
+
+    rows: dict[int, list[int]] = {}
+    for row_idx, col_idx in sorted(non_empty):
+        rows.setdefault(row_idx, []).append(col_idx)
+
+    segments: list[tuple[int, int, int]] = []
+    for row_idx, cols in rows.items():
+        start_col = cols[0]
+        end_col = cols[0]
+        for col_idx in cols[1:]:
+            if col_idx - end_col <= 2:
+                end_col = col_idx
+                continue
+            segments.append((row_idx, start_col, end_col))
+            start_col = col_idx
+            end_col = col_idx
+        segments.append((row_idx, start_col, end_col))
+
+    regions: list[list[tuple[int, int, int]]] = []
+    visited: set[tuple[int, int, int]] = set()
+    for start in sorted(segments):
+        if start in visited:
+            continue
+
+        stack = [start]
+        region: list[tuple[int, int, int]] = []
+        visited.add(start)
+        while stack:
+            row_idx, start_col, end_col = stack.pop()
+            region.append((row_idx, start_col, end_col))
+            for neighbor in segments:
+                if neighbor in visited:
+                    continue
+                neighbor_row, neighbor_start, neighbor_end = neighbor
+                if abs(neighbor_row - row_idx) != 1:
+                    continue
+                overlaps = not (neighbor_end < start_col or end_col < neighbor_start)
+                touches = neighbor_end + 1 == start_col or end_col + 1 == neighbor_start
+                if overlaps or touches:
+                    visited.add(neighbor)
+                    stack.append(neighbor)
+
+        regions.append(sorted(region))
+
+    tables: list[list[list[str]]] = []
+    for region in regions:
+        min_row = min(row_idx for row_idx, _, _ in region)
+        max_row = max(row_idx for row_idx, _, _ in region)
+        min_col = min(start_col for _, start_col, _ in region)
+        max_col = max(end_col for _, _, end_col in region)
+        tables.append(
+            [
+                [cells.get((row_idx, col_idx), "") for col_idx in range(min_col, max_col + 1)]
+                for row_idx in range(min_row, max_row + 1)
+            ]
+        )
+
+    return tables
+
+
 def _ensure_renderable_grid(
     min_row: int | None,
     min_col: int | None,
@@ -204,11 +272,7 @@ def parse_xlsx(path: Path) -> tuple[str, list[list[str]]]:
                                 cells[(row_idx, col_idx)] = fill_value
 
                     if min_row is not None and min_col is not None and max_row >= 0 and max_col >= 0:
-                        table = [
-                            [cells.get((row_idx, col_idx), "") for col_idx in range(min_col, max_col + 1)]
-                            for row_idx in range(min_row, max_row + 1)
-                        ]
-                        sheet_tables.append(table)
+                        sheet_tables.extend(_split_table_regions(cells))
     except (zipfile.BadZipFile, KeyError, ET.ParseError) as exc:
         raise ProcessingError(f"invalid xlsx file: {path.name}") from exc
 
@@ -216,7 +280,8 @@ def parse_xlsx(path: Path) -> tuple[str, list[list[str]]]:
     if not tables:
         raise ProcessingError(f"xlsx file has no readable worksheet data: {path.name}")
 
-    return _render_markdown_table(tables), tables
+    markdown = "\n\n".join(_render_markdown_table(table) for table in sheet_tables if table)
+    return markdown, tables
 
 
 def parse_pdf(path: Path) -> str:
